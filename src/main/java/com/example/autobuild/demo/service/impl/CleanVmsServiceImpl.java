@@ -2,7 +2,7 @@ package com.example.autobuild.demo.service.impl;
 
 import com.example.autobuild.demo.common.Response;
 import com.example.autobuild.demo.service.CleanVmsService;
-import com.example.autobuild.demo.util.ClientManager;
+import com.example.autobuild.demo.util.ThreadScopeOSClient;
 import com.example.autobuild.demo.util.ServerManager;
 import org.openstack4j.api.OSClient;
 import org.springframework.stereotype.Service;
@@ -16,7 +16,7 @@ import java.util.concurrent.RejectedExecutionException;
 @Service
 public class CleanVmsServiceImpl implements CleanVmsService {
 
-    private ClientManager clientManager = new ClientManager();
+
     private ExecutorService executorService;
 
     @Override
@@ -24,7 +24,7 @@ public class CleanVmsServiceImpl implements CleanVmsService {
         if (id == null) {
             return new Response().success();
         }
-        OSClient.OSClientV3 os = clientManager.getOSClientV3();
+        OSClient.OSClientV3 os = ThreadScopeOSClient.getThreadInstance();
         ServerManager serverManager = new ServerManager(os);
         boolean result = serverManager.deleteServer(id);
         return result ? new Response().success() : new Response().failure();
@@ -93,7 +93,7 @@ public class CleanVmsServiceImpl implements CleanVmsService {
 
         @Override
         public void run() {
-            OSClient.OSClientV3 os = clientManager.getOSClientV3();
+            OSClient.OSClientV3 os = ThreadScopeOSClient.getThreadInstance();
             try {
                 ServerManager serverManager = new ServerManager(os);
                 boolean result = serverManager.deleteServer(vmId);

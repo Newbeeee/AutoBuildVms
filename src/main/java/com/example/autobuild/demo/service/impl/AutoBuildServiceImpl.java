@@ -6,7 +6,7 @@ import com.example.autobuild.demo.config.AutoBuildConfig;
 import com.example.autobuild.demo.service.AutoBuildService;
 import com.example.autobuild.demo.service.CleanVmsService;
 import com.example.autobuild.demo.service.RedisService;
-import com.example.autobuild.demo.util.ClientManager;
+import com.example.autobuild.demo.util.ThreadScopeOSClient;
 import com.example.autobuild.demo.util.ServerManager;
 import org.openstack4j.api.OSClient;
 import org.openstack4j.model.compute.Address;
@@ -38,7 +38,6 @@ public class AutoBuildServiceImpl implements AutoBuildService {
     @Autowired
     CleanVmsService cleanVmsService;
 
-    private ClientManager clientManager = new ClientManager();
     private ExecutorService executorService;
     private boolean createFailFlag = false;
 
@@ -172,7 +171,7 @@ public class AutoBuildServiceImpl implements AutoBuildService {
              * Unable to retrieve current session.
              * Please verify thread has a current session available.
              */
-            OSClient.OSClientV3 os = clientManager.getOSClientV3();
+            OSClient.OSClientV3 os = ThreadScopeOSClient.getThreadInstance();
             ServerManager createVmManager = new ServerManager(os);
 
             try {
