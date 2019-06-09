@@ -60,40 +60,41 @@ public class AutoBuildServiceImpl implements AutoBuildService, OnCreateVmRespons
             //如果剩余任务数
             int newThreadCount = last < threadCount ? last : threadCount;
             CountDownLatch latch = new CountDownLatch(newThreadCount);
+            boolean latchAwait = true;
             for (int i = 0; i < newThreadCount; i++) {
                 CreateVmTask mission = new CreateVmTask(latch, numId, this);
                 try {
-                    if (threadPool != null) {
-                        threadPool.execute(mission);
-                    }
+                    threadPool.execute(mission);
                 } catch (RejectedExecutionException e) {
                     System.out.println("线程池已停止，任务：" + mission.numId + "被拒绝");
+                    latchAwait = false;
+                    break;
                 }
 
                 numId++;
                 count++;
             }
 
-            try {
-                latch.await();
-            } catch (InterruptedException e) {
-                // 程序被shutdownNow的话，要在这里countDown掉锁
-                e.printStackTrace();
-                latch.countDown();
-                break;
+            if (latchAwait) {
+                try {
+                    latch.await();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                times++;
             }
-            times++;
-            if (threadPool == null) {
+
+
+            if (threadPool.isShutdown()) {
                 System.out.println("线程池已停止，停止创建虚拟机");
                 createFailFlag = true;
                 break;
             }
         }
 
-        //会有创建失败的
-        if (threadPool != null) {
-            threadPool.shutdown();
-        }
+        //可能会有创建失败的
+        threadPool.shutdown();
+
         if (createFailFlag) {
             System.out.println("有虚拟机创建失败");
             return new Response().failure();
@@ -106,8 +107,7 @@ public class AutoBuildServiceImpl implements AutoBuildService, OnCreateVmRespons
     @Override
     public Response stopCreatingVms() {
         if (threadPool != null) {
-            threadPool.shutdownNow();
-            threadPool = null;
+            threadPool.shutdown();
             System.out.println("停止线程池");
         } else {
             System.out.println("线程池已停止");
