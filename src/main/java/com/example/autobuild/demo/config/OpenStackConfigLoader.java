@@ -1,10 +1,7 @@
-package com.example.autobuild.demo.util;
-
-import org.springframework.stereotype.Component;
+package com.example.autobuild.demo.config;
 
 import java.util.ResourceBundle;
 
-@Component
 public class OpenStackConfigLoader {
 
     private final static ResourceBundle resourceBundle =

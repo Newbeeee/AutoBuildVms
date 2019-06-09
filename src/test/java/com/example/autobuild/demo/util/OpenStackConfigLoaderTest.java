@@ -1,8 +1,7 @@
 package com.example.autobuild.demo.util;
 
+import com.example.autobuild.demo.config.OpenStackConfigLoader;
 import org.junit.Test;
-
-import static org.junit.Assert.*;
 
 public class OpenStackConfigLoaderTest {
 

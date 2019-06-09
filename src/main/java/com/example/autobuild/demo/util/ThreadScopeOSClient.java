@@ -1,5 +1,6 @@
 package com.example.autobuild.demo.util;
 
+import com.example.autobuild.demo.config.OpenStackConfigLoader;
 import org.openstack4j.api.OSClient;
 import org.openstack4j.model.common.Identifier;
 import org.openstack4j.openstack.OSFactory;
