@@ -31,7 +31,7 @@ public class CleanVmsServiceImpl implements CleanVmsService {
     @Override
     public void cleanVmsByIds(List<String> ids) throws Exception {
         if (ids == null || ids.size() == 0) {
-            throw new Exception("列表为空");
+            throw new Exception("删除列表为空");
         }
 
         int total = ids.size();

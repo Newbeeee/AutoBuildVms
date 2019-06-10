@@ -135,7 +135,7 @@ public class AutoBuildServiceImpl implements AutoBuildService, OnCreateVmRespons
             try {
                 cleanVmsService.cleanVmsByIds(vmIdList);
             } catch (Exception e) {
-                e.printStackTrace();
+                System.out.println(e.getMessage());
             }
             vmIdList.clear();
             if (lastVmId == null) {

@@ -7,7 +7,9 @@ import com.example.autobuild.demo.util.ThreadScopeOSClient;
 import org.openstack4j.api.OSClient;
 import org.openstack4j.model.compute.Server;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 public class CreateVmTask implements Runnable {
@@ -52,16 +54,13 @@ public class CreateVmTask implements Runnable {
             if (server == null) {
                 //createFailFlag = true;
                 onCreateVmResponse.onFailure();
-
-                if (server.getId() != null) {
-                    System.out.println("创建虚拟机失败，虚拟机id: " + server.getId());
-                }
             } else {
                 //redisService.rightPush(HUNDRED_VM_LIST, server.getId());
                 onCreateVmResponse.onSuccess(server.getId());
 
                 //获取虚拟机的 ip 地址并打印
-                String firstAddress = GetVmAddressUtil.getVmAddress(server).get(0);
+                List<String> address = GetVmAddressUtil.getVmAddress(server);
+                String firstAddress = address.size() > 0 ? address.get(0) : "无地址";
                 System.out.println(System.currentTimeMillis() + " ip地址 ：" + firstAddress + " 虚拟机名 ：" + server.getName());
             }
         } catch (Exception e) {

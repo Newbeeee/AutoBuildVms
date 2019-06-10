@@ -18,6 +18,7 @@ public class CreateVmHelper {
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("创建虚拟机阶段出错: " + e.getMessage());
+            return null;
         }
 
 
