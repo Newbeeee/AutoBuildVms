@@ -2,22 +2,20 @@ package com.example.autobuild.demo.service.impl;
 
 import com.example.autobuild.demo.common.Response;
 import com.example.autobuild.demo.service.CleanVmsService;
+import com.example.autobuild.demo.service.task.DeleteVmTask;
 import com.example.autobuild.demo.util.ThreadScopeOSClient;
 import com.example.autobuild.demo.util.ServerManager;
 import org.openstack4j.api.OSClient;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.*;
 
 @Service
 public class CleanVmsServiceImpl implements CleanVmsService {
 
 
-    private ExecutorService executorService;
+    private ThreadPoolExecutor threadPool;
 
     @Override
     public Response cleanVmById(String id) {
@@ -31,25 +29,25 @@ public class CleanVmsServiceImpl implements CleanVmsService {
     }
 
     @Override
-    public Response cleanVmsByIds(List<String> ids) {
+    public void cleanVmsByIds(List<String> ids) throws Exception {
         if (ids == null || ids.size() == 0) {
-            return new Response().success();
+            throw new Exception("列表为空");
         }
 
         int total = ids.size();
         int threadCount = total < 10 ? total : 10;
         int num = 0;
 
-        executorService = Executors.newFixedThreadPool(threadCount);
+        threadPool = new ThreadPoolExecutor(threadCount, threadCount, 60, TimeUnit.SECONDS, new LinkedBlockingDeque<>(5));
         while (num < total) {
             CountDownLatch latch = new CountDownLatch(threadCount);
             for (int i = 0; i < threadCount; i++) {
                 if (ids.get(num) != null) {
-                    DeleteVmMission mission = new DeleteVmMission(latch, ids.get(num), num);
+                    DeleteVmTask task = new DeleteVmTask(latch, ids.get(num), num);
                     try {
-                        executorService.submit(mission);
+                        threadPool.execute(task);
                     } catch (RejectedExecutionException e) {
-                        System.out.println("线程池已停止，任务：" + mission.num + "被拒绝");
+                        System.out.println("线程池已停止，任务：" + task.num + "被拒绝");
                     } finally {
                         num++;
                     }
@@ -62,50 +60,17 @@ public class CleanVmsServiceImpl implements CleanVmsService {
                 latch.await();
             } catch (InterruptedException e) {
                 e.printStackTrace();
-                latch.countDown();
-                break;
             }
         }
 
         //本次删除完成
         System.out.println("本次删除完成");
-        return new Response().success();
     }
 
     @Override
     public void stopCleaning() {
-        if (executorService != null) {
-            executorService.shutdown();
-        }
-    }
-
-    class DeleteVmMission extends Thread {
-
-        CountDownLatch latch;
-        String vmId;
-        int num;
-
-        public DeleteVmMission(CountDownLatch latch, String vmId, int num) {
-            this.latch = latch;
-            this.vmId = vmId;
-            this.num = num;
-        }
-
-        @Override
-        public void run() {
-            OSClient.OSClientV3 os = ThreadScopeOSClient.getThreadInstance();
-            try {
-                ServerManager serverManager = new ServerManager(os);
-                boolean result = serverManager.deleteServer(vmId);
-                if (result) {
-                    int number = num + 1;
-                    System.out.println("删除第" + number + "个虚拟机成功");
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            } finally {
-                latch.countDown();
-            }
+        if (threadPool != null) {
+            threadPool.shutdown();
         }
     }
 }

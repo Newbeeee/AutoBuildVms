@@ -7,7 +7,7 @@ import java.util.List;
 public interface CleanVmsService {
     Response cleanVmById(String id);
 
-    Response cleanVmsByIds(List<String> ids);
+    void cleanVmsByIds(List<String> ids) throws Exception;
 
     void stopCleaning();
 }

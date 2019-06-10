@@ -29,41 +29,16 @@ public class ServerManager {
                 .networks(networks)
                 .keypairName(keypairName)
                 .build();
-
-        Server server = null;
-        try {
-            server = os.compute().servers().boot(sc);
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("创建虚拟机出错: " + e.getMessage());
-            return null;
-        }
-
-        Server result = null;
-
-        try {
-            /**
-             * 启动虚拟机并等待状态为active，最多等待2分钟
-             * 如果2分钟还没创建好，每隔30秒请求一次
-             * 直到状态为active
-             * 这里还需要捕获一些异常，如资源不够，配额不够等
-             * 但暂时还没遇到
-             */
-
-            result = os.compute().servers().waitForServerStatus(server.getId(), Server.Status.ACTIVE, 2, TimeUnit.MINUTES);
-            while (result.getStatus() == null) {
-                result = os.compute().servers().waitForServerStatus(server.getId(), Server.Status.ACTIVE, 30, TimeUnit.SECONDS);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("创建虚拟机出错: " + e.getMessage());
-            return null;
-        }
-        return result;
+        Server server = os.compute().servers().boot(sc);
+        return server;
     }
 
     public boolean deleteServer(String serverId) {
         ActionResponse res = os.compute().servers().delete(serverId);
         return res.isSuccess();
+    }
+
+    public Server waitForServerStatus(String serverId, Server.Status status, int time, TimeUnit timeUnit) {
+        return os.compute().servers().waitForServerStatus(serverId, status, time, timeUnit);
     }
 }

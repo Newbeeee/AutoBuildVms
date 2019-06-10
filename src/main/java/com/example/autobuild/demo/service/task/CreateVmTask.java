@@ -7,8 +7,7 @@ import com.example.autobuild.demo.util.ThreadScopeOSClient;
 import org.openstack4j.api.OSClient;
 import org.openstack4j.model.compute.Server;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 
 public class CreateVmTask implements Runnable {
@@ -34,16 +33,21 @@ public class CreateVmTask implements Runnable {
 
         try {
             System.out.println("开始创建虚拟机 " + numId);
-            List<String> networks = new ArrayList<>();
-            networks.add(CreateVmConfigLoader.NETWORKS);
             //此时，虚拟机状态为 ACTIVE，虚拟机实际创建完毕
             //也可能虚拟机为 null，创建失败
-            Server server = createVmManager.createServer("hundred-vm-" + numId,
+//            Server server = createVmManager.createServer("hundred-vm-" + numId,
+//                    CreateVmConfigLoader.FLAVOR_ID,
+//                    CreateVmConfigLoader.IMAGE_ID,
+//                    Arrays.asList(CreateVmConfigLoader.NETWORKS),
+//                    CreateVmConfigLoader.SECURITY_GROUP,
+//                    CreateVmConfigLoader.KEYPAIR_NAME);
+            Server server = CreateVmHelper.createVm("hundred-vm-" + numId,
                     CreateVmConfigLoader.FLAVOR_ID,
                     CreateVmConfigLoader.IMAGE_ID,
-                    networks,
+                    Arrays.asList(CreateVmConfigLoader.NETWORKS),
                     CreateVmConfigLoader.SECURITY_GROUP,
-                    CreateVmConfigLoader.KEYPAIR_NAME);
+                    CreateVmConfigLoader.KEYPAIR_NAME,
+                    createVmManager);
 
             if (server == null) {
                 //createFailFlag = true;
