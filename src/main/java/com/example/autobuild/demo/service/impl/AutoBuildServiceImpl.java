@@ -2,10 +2,9 @@ package com.example.autobuild.demo.service.impl;
 
 import com.example.autobuild.demo.common.Response;
 import com.example.autobuild.demo.common.ResponseStatusEnum;
-import com.example.autobuild.demo.config.AutoBuildConfig;
 import com.example.autobuild.demo.service.AutoBuildService;
 import com.example.autobuild.demo.service.CleanVmsService;
-import com.example.autobuild.demo.service.RedisService;
+import com.example.autobuild.demo.service.KeepCreatedVmsService;
 import com.example.autobuild.demo.service.task.CreateVmTask;
 import com.example.autobuild.demo.service.task.OnCreateVmResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,10 +20,7 @@ public class AutoBuildServiceImpl implements AutoBuildService, OnCreateVmRespons
     public static final String HUNDRED_VM_LIST = "hundred_vm_list";
 
     @Autowired
-    AutoBuildConfig autoBuildConfig;
-
-    @Autowired
-    RedisService redisService;
+    KeepCreatedVmsService keepCreatedVmsService;
 
     @Autowired
     CleanVmsService cleanVmsService;
@@ -123,10 +119,10 @@ public class AutoBuildServiceImpl implements AutoBuildService, OnCreateVmRespons
         while (num < totalVms) {
             int newThreadCount = totalVms < onceATime ? totalVms : onceATime;
             for (int i = 0; i < newThreadCount; i++) {
-                String vmId = redisService.rightPop(HUNDRED_VM_LIST);
+                String vmId = keepCreatedVmsService.popVm(HUNDRED_VM_LIST);
                 lastVmId = vmId;
                 if (vmId == null) {
-                    System.out.println("redis列表已无缓存虚拟机");
+                    System.out.println("虚拟机列表已无缓存虚拟机");
                     break;
                 }
                 vmIdList.add(vmId);
@@ -157,6 +153,6 @@ public class AutoBuildServiceImpl implements AutoBuildService, OnCreateVmRespons
 
     @Override
     public void onSuccess(String serverId) {
-        redisService.rightPush(HUNDRED_VM_LIST, serverId);
+        keepCreatedVmsService.pushVm(HUNDRED_VM_LIST, serverId);
     }
 }
